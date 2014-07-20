@@ -6,7 +6,7 @@
 		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
 		<style>
 			body {
-				font-family: Monospace;
+				font-family: Segoe UI, Helvetica, Ubuntu, sans-serif;
 				background-color: #f0f0f0;
 				margin: 0px;
 				overflow: hidden;
@@ -15,12 +15,13 @@
 			}
 		</style>
 	</head>
+
 	<body>
 		<script src="static/three.min.js"></script>
 
 		<script src="static/js/controls/TrackballControls.js"></script>
 
-		<script src="static/js/libs/stats.min.js"></script>
+		<script src="static/js/libs/score.js"></script>
 
 		<script>
 
@@ -28,10 +29,7 @@
 			var camera, controls, scene, renderer;
 			var objects = []
 			var pointers = {};
-
-			var mouse = new THREE.Vector2(),
-			offset = new THREE.Vector3(),
-			INTERSECTED, SELECTED;
+			var score = 0;
 
 			init();
 			animate();
@@ -65,6 +63,7 @@
 				scene.add( light );
 				scene.add( light_2 );
 
+				
 				var geometry = new THREE.TorusGeometry( 50, 40, 16, 100 );
 
 				for ( var i = 0; i < 6; i ++ ) {
@@ -98,16 +97,16 @@
 				renderer = new THREE.WebGLRenderer( { antialias: false } );
 				renderer.setClearColor( 0xf0f0f0 );
 
-				renderer.setSize( window.innerWidth, window.innerHeight );
+				renderer.setSize( window.innerWidth, window.innerHeight);
 				renderer.sortObjects = false;
 
 				
 				container.appendChild( renderer.domElement );
 
-				stats = new Stats();
-				stats.domElement.style.position = 'absolute';
-				stats.domElement.style.top = '0px';
-				container.appendChild( stats.domElement );
+				scoreboard = new Score();
+				scoreboard.domElement.style.position = 'absolute';
+				scoreboard.domElement.style.top = '0px';
+				container.appendChild( scoreboard.domElement );
 
 				window.addEventListener( 'resize', onWindowResize, false );
 
@@ -144,14 +143,13 @@
 				requestAnimationFrame( animate );
 
 				render();
-				stats.update();
+				scoreboard.update(score);
 				collisionUpdate();
 
 			}
 
 			function render() {
 				move();
-				//bounce()
 				renderer.render( scene, camera );
 
 			}
@@ -169,8 +167,10 @@
 							var collisionResults = ray.intersectObjects( objects );
 
 							for (var i = 0; i < collisionResults.length; i++){
-								if (collisionResults[i].distance < directionVector.length() +100)
-									scene.remove(collisionResults[i].object);
+								if (collisionResults.length > 0 && collisionResults[i].distance < directionVector.length()){
+									scene.remove(collisionResults[i])
+										score += 100;
+								}
 							}
 						}
 					}
@@ -200,10 +200,8 @@
 				pointers[id].position.x = window.innerWidth/2 - x;
 				pointers[id].position.y = y - window.innerHeight/2;
 				pointers[id].position.z = z;
-				//console.log(pointers[id].position);
 				scene.add(pointers[id]);
 			}
 		</script>
 
-	</body>
 </html>
