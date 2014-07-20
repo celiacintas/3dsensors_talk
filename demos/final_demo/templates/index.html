@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<title>three.js webgl - draggable cubes</title>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+		<style>
+			body {
+				font-family: Monospace;
+				background-color: #f0f0f0;
+				margin: 0px;
+				overflow: hidden;
+				width:640px;
+				height:480px;
+			}
+		</style>
+	</head>
+	<body>
+		<script src="static/three.min.js"></script>
+
+		<script src="static/js/controls/TrackballControls.js"></script>
+
+		<script src="static/js/libs/stats.min.js"></script>
+
+		<script>
+
+			var container, stats;
+			var camera, controls, scene, renderer;
+			var objects = []
+			var pointers = {};
+
+			var mouse = new THREE.Vector2(),
+			offset = new THREE.Vector3(),
+			INTERSECTED, SELECTED;
+
+			init();
+			animate();
+
+			function init() {
+
+				container = document.createElement( 'div' );
+				document.body.appendChild( container );
+
+				camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 1, 4000 );
+				camera.position.z = 3000;
+				camera.position.x = 500;
+				camera.position.y = 100;
+
+				scene = new THREE.Scene();
+
+				scene.add( new THREE.AmbientLight( 0x505050 ) );
+
+				var light = new THREE.SpotLight( 0xffffff, 1.5 );
+				light.position.set( 0, 500, 2000 );
+				light.castShadow = true;
+
+				var light_2 = new THREE.SpotLight( 0xffffff, 2.0 );
+				light_2.position.set( 2000, 0, 1000 );
+				light_2.castShadow = true;
+
+				light.shadowCameraNear = 200;
+				light.shadowCameraFar = camera.far;
+				light.shadowCameraFov = 50;
+				
+				scene.add( light );
+				scene.add( light_2 );
+
+				var geometry = new THREE.TorusGeometry( 50, 40, 16, 100 );
+
+				for ( var i = 0; i < 6; i ++ ) {
+
+					var object = new THREE.Mesh( geometry, new THREE.MeshLambertMaterial( { color: Math.random() * 0xffffff } ) );
+
+					object.material.ambient = object.material.color;
+
+					object.position.x = Math.random() * 800;
+					object.position.y = Math.random() * 800;
+					object.position.z = Math.random() * (1500 - 500) + 500;
+					//console.log(object.position.z)
+				
+					object.rotation.x = Math.random() * 2 * Math.PI;
+					object.rotation.y = Math.random() * 2 * Math.PI;
+					object.rotation.z = Math.random() * 2 * Math.PI;
+
+					object.scale.x = Math.random() * 2 + 1;
+					object.scale.y = Math.random() * 2 + 1;
+					object.scale.z = Math.random() * 2 + 1;
+
+					object.castShadow = true;
+					object.receiveShadow = true;
+
+					scene.add( object );
+
+					objects.push( object );
+
+				}
+
+				renderer = new THREE.WebGLRenderer( { antialias: false } );
+				renderer.setClearColor( 0xf0f0f0 );
+
+				renderer.setSize( window.innerWidth, window.innerHeight );
+				renderer.sortObjects = false;
+
+				
+				container.appendChild( renderer.domElement );
+
+				stats = new Stats();
+				stats.domElement.style.position = 'absolute';
+				stats.domElement.style.top = '0px';
+				container.appendChild( stats.domElement );
+
+				window.addEventListener( 'resize', onWindowResize, false );
+
+				sse = new EventSource('/events');
+                sse.onmessage = updateReceived;
+
+			}
+
+			function onWindowResize() {
+
+				camera.aspect = window.innerWidth / window.innerHeight;
+				camera.updateProjectionMatrix();
+
+				renderer.setSize( window.innerWidth, window.innerHeight );
+
+			}
+			
+	
+			function move(){
+				
+				var timer = 0.00001 * Date.now();
+				var temp
+				for(var i = 0, size = objects.length; i < size ; i++){
+					objects[i].rotation.x += 0.1;
+					objects[i].rotation.y += 0.05;
+					objects[i].position.y = Math.cos( objects[i].rotation.x + timer) * 700 ;
+					objects[i].position.x = Math.sin( objects[i].rotation.y + timer) * 1000 + 500 ;
+				}
+			}
+
+				
+			function animate() {
+
+				requestAnimationFrame( animate );
+
+				render();
+				stats.update();
+				collisionUpdate();
+
+			}
+
+			function render() {
+				move();
+				//bounce()
+				renderer.render( scene, camera );
+
+			}
+
+			function collisionUpdate(){
+
+				for (var hands in pointers){
+        			var originPoint = pointers[hands].position.clone();
+				
+					for (var vertexIndex = 0; vertexIndex < pointers[hands].geometry.vertices.length; vertexIndex++){
+							var localVertex = pointers[hands].geometry.vertices[vertexIndex].clone();
+							var globalVertex = localVertex.applyMatrix4( pointers[hands].matrix );
+							var directionVector = globalVertex.sub( pointers[hands].position );
+							var ray = new THREE.Raycaster( originPoint, directionVector.clone().normalize());
+							var collisionResults = ray.intersectObjects( objects );
+
+							for (var i = 0; i < collisionResults.length; i++){
+								if (collisionResults[i].distance < directionVector.length() +100)
+									scene.remove(collisionResults[i].object);
+							}
+						}
+					}
+			}
+
+			function updateReceived (event) {
+				var data = JSON.parse(event.data);
+				switch(data.type) {
+    				case "create_hand":
+    					createPointer(data.id, data.hand_x, data.hand_y, data.hand_z);
+				        break;
+				    case "update_pos":
+				    	pointers[data.id].position.x = window.innerWidth/2 - data.hand_x;
+				    	pointers[data.id].position.y = data.hand_y - window.innerHeight/2;
+				    	pointers[data.id].position.z = data.hand_z;
+				    	//console.log('mano', pointers[data.id].position.z)
+				        break;
+				    case "remove_hand":
+				    	scene.remove(pointers[data.id]);
+				}
+				
+			}
+
+			function createPointer(id, x, y, z){
+				geometry = new THREE.BoxGeometry( 100, 100, 100 );
+				pointers[id] = new THREE.Mesh( geometry, new THREE.MeshLambertMaterial( { color: Math.random() * 0xffffff } ) );
+				pointers[id].position.x = window.innerWidth/2 - x;
+				pointers[id].position.y = y - window.innerHeight/2;
+				pointers[id].position.z = z;
+				//console.log(pointers[id].position);
+				scene.add(pointers[id]);
+			}
+		</script>
+
+	</body>
+</html>
