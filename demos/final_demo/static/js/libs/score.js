@@ -1,9 +1,5 @@
 var Score = function () {
 
-	var startTime = Date.now(), prevTime = startTime;
-	var fps = 0, fpsMin = Infinity, fpsMax = 0;
-	var frames = 0, mode = 0;
-
 	var container = document.createElement( 'div' );
 	container.id = 'scoreboard';
 	container.style.cssText = 'width:500px;height:15px;opacity:0.9;cursor:pointer';
