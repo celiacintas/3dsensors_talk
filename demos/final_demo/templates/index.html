@@ -25,9 +25,9 @@
 
 		<script>
 
-			var container, stats;
+			var container;
 			var camera, controls, scene, renderer;
-			var objects = []
+			var objects = [];
 			var pointers = {};
 			var score = 0;
 
@@ -38,6 +38,8 @@
 
 				container = document.createElement( 'div' );
 				document.body.appendChild( container );
+
+				// Create the camera, the scene and add some lights
 
 				camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 1, 4000 );
 				camera.position.z = 3000;
@@ -53,26 +55,20 @@
 				light.castShadow = true;
 
 				var light_2 = new THREE.SpotLight( 0xffffff, 2.0 );
-				light_2.position.set( 2000, 0, 1000 );
+				light_2.position.set( 2000, 0, 1400 );
 				light_2.castShadow = true;
-
-				var light_3 = new THREE.SpotLight( 0xffffff, 2.0 );
-				light_3.position.set( 2000, 2000, 1000);
-				light_3.castShadow = true;
 
 				scene.add( light );
 				scene.add( light_2 );
-				scene.add( light_3);
+				
+				// Load the blender's monkey and give him different position, size, colors and levels of shininess ...
 
-				
-				//var geometry = new THREE.TorusGeometry( 50, 40, 16, 100 );
-				
 				var loader = new THREE.JSONLoader();
 				loader.load( 'static/obj/Suzanne.js', function ( geometry ) {
 
 					geometry.computeVertexNormals();
 
-					for ( var i = 0; i < 16; i ++ ) {
+					for ( var i = 0; i < 8; i ++ ) {
 						var material = new THREE.MeshLambertMaterial( { color: Math.random() * 0xffffff } );
 	
 						var object = new THREE.Mesh( geometry, material );
@@ -88,7 +84,7 @@
 						object.rotation.y = Math.random() * 2 * Math.PI;
 						object.rotation.z = Math.random() * 2 * Math.PI;
 
-						object.scale.x = object.scale.y = object.scale.z = Math.random() * (200 - 80) + 80;
+						object.scale.x = object.scale.y = object.scale.z = Math.random() * (250 - 125) + 125;
 						
 						object.castShadow = true;
 						object.receiveShadow = true;
@@ -114,6 +110,7 @@
 
 				window.addEventListener( 'resize', onWindowResize, false );
 
+				// Listen to the kinect's events
 				sse = new EventSource('/events');
                 sse.onmessage = updateReceived;
 
@@ -130,6 +127,7 @@
 			
 	
 			function move(){
+				/*Calculate the next position of our monkey's heads*/
 				
 				var timer = 0.00001 * Date.now();
 				var temp
@@ -143,13 +141,11 @@
 
 				
 			function animate() {
-
+				/*Update and Render*/
 				requestAnimationFrame( animate );
-
 				render();
-				scoreboard.update(score);
 				collisionUpdate();
-
+				scoreboard.update(score);	
 			}
 
 			function render() {
@@ -159,7 +155,10 @@
 			}
 
 			function collisionUpdate(){
+				/*Check if our hand is intersecting some monkey*/
+
 				var localVertex, globalVertex, directionVector, ray, collisionResults, index;
+
 				for (var hands in pointers){
         			var originPoint = pointers[hands].position.clone();
 				
@@ -172,10 +171,10 @@
 
 							for (var i = 0; i < collisionResults.length; i++){
 								if (collisionResults.length > 0 && collisionResults[i].distance < directionVector.length()){
-									scene.remove(collisionResults[i].object)
+									score += 100;
+									scene.remove(collisionResults[i].object);
 									index = objects.indexOf(collisionResults[i].object);
 									objects.splice(index, 1);
-									score += 100;
 								}
 							}
 						}
@@ -183,6 +182,8 @@
 			}
 
 			function updateReceived (event) {
+				/*The kinect send some more data .. decide what you want to do ..*/
+
 				var data = JSON.parse(event.data);
 				switch(data.type) {
     				case "create_hand":
@@ -202,6 +203,8 @@
 			}
 
 			function createPointer(id, x, y, z){
+				/*Hey .. there is a new hand let's draw it*/
+
 				geometry = new THREE.BoxGeometry( 100, 100, 100 );
 				pointers[id] = new THREE.Mesh( geometry, new THREE.MeshLambertMaterial( { color: Math.random() * 0xffffff } ) );
 				pointers[id].position.x = window.innerWidth/2 - x;
