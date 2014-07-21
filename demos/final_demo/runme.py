@@ -28,7 +28,7 @@ DIRECCION_PUBLICADOR = 'tcp://127.0.0.1:5555'
 def kinect_simulator():
     myKinect = Kinect(DIRECCION_PUBLICADOR)
     return myKinect.kinect_loop()    
-
+    
 def generador_de_eventos():
     '''Una función que envía acutalizaciones usando el protocolo de
     eventos emitidos por el servidor (SSE). La directiva yield retorna
@@ -55,7 +55,7 @@ def index():
 
 @run_with_reloader
 def main():
-    '''Función mainl del programa'''
+    '''Función main del programa'''
     p = Process(target=kinect_simulator)
     p.start()
     host, port = '0.0.0.0', 12345
