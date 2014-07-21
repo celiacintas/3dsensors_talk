@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 	<head>
-		<title>three.js webgl - draggable cubes</title>
+		<title>Our first game with three.js and kinect</title>
 		<meta charset="utf-8">
 		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
 		<style>
@@ -57,13 +57,9 @@
 				light_2.castShadow = true;
 
 				var light_3 = new THREE.SpotLight( 0xffffff, 2.0 );
-				light_3.position.set( 0, 1500, 0 );
+				light_3.position.set( 2000, 2000, 1000);
 				light_3.castShadow = true;
 
-				light.shadowCameraNear = 200;
-				light.shadowCameraFar = camera.far;
-				light.shadowCameraFov = 50;
-				
 				scene.add( light );
 				scene.add( light_2 );
 				scene.add( light_3);
@@ -76,12 +72,13 @@
 
 					geometry.computeVertexNormals();
 
-					for ( var i = 0; i < 6; i ++ ) {
+					for ( var i = 0; i < 16; i ++ ) {
 						var material = new THREE.MeshLambertMaterial( { color: Math.random() * 0xffffff } );
 	
 						var object = new THREE.Mesh( geometry, material );
 
 						object.material.ambient = object.material.color;
+						object.material.shininess = Math.random() * (1000 - 40) + 40;
 
 						object.position.x = Math.random() * 800;
 						object.position.y = Math.random() * 800;
@@ -91,7 +88,7 @@
 						object.rotation.y = Math.random() * 2 * Math.PI;
 						object.rotation.z = Math.random() * 2 * Math.PI;
 
-						object.scale.x = object.scale.y = object.scale.z = Math.random() * 50 + 200;
+						object.scale.x = object.scale.y = object.scale.z = Math.random() * (200 - 80) + 80;
 						
 						object.castShadow = true;
 						object.receiveShadow = true;
