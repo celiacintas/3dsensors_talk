@@ -44,7 +44,6 @@ class Kinect:
 
     def create(self, src, id, pos, time):
         try:
-            #tmp_pos = self.depth_generator.to_projective([pos])[0]
             data = {'type':'create_hand', 'id': id, 'hand_x': pos[0], 
                     'hand_y': pos[1], 'hand_z': pos[2]}
         except NoneType:
@@ -55,7 +54,6 @@ class Kinect:
 
     def update(self, src, id, pos, time):
         try:
-            #tmp_pos = self.depth_generator.to_projective([pos])[0]
             data = {'type':'update_pos', 'id': id, 'hand_x': pos[0], 
                     'hand_y': pos[1], 'hand_z': pos[2]}
         except NoneType:
