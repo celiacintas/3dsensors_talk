@@ -56,43 +56,50 @@
 				light_2.position.set( 2000, 0, 1000 );
 				light_2.castShadow = true;
 
+				var light_3 = new THREE.SpotLight( 0xffffff, 2.0 );
+				light_3.position.set( 0, 1500, 0 );
+				light_3.castShadow = true;
+
 				light.shadowCameraNear = 200;
 				light.shadowCameraFar = camera.far;
 				light.shadowCameraFov = 50;
 				
 				scene.add( light );
 				scene.add( light_2 );
+				scene.add( light_3);
 
 				
-				var geometry = new THREE.TorusGeometry( 50, 40, 16, 100 );
-
-				for ( var i = 0; i < 6; i ++ ) {
-
-					var object = new THREE.Mesh( geometry, new THREE.MeshLambertMaterial( { color: Math.random() * 0xffffff } ) );
-
-					object.material.ambient = object.material.color;
-
-					object.position.x = Math.random() * 800;
-					object.position.y = Math.random() * 800;
-					object.position.z = Math.random() * (1500 - 500) + 500;
-					//console.log(object.position.z)
+				//var geometry = new THREE.TorusGeometry( 50, 40, 16, 100 );
 				
-					object.rotation.x = Math.random() * 2 * Math.PI;
-					object.rotation.y = Math.random() * 2 * Math.PI;
-					object.rotation.z = Math.random() * 2 * Math.PI;
+				var loader = new THREE.JSONLoader();
+				loader.load( 'static/obj/Suzanne.js', function ( geometry ) {
 
-					object.scale.x = Math.random() * 2 + 1;
-					object.scale.y = Math.random() * 2 + 1;
-					object.scale.z = Math.random() * 2 + 1;
+					geometry.computeVertexNormals();
 
-					object.castShadow = true;
-					object.receiveShadow = true;
+					for ( var i = 0; i < 6; i ++ ) {
+						var material = new THREE.MeshLambertMaterial( { color: Math.random() * 0xffffff } );
+	
+						var object = new THREE.Mesh( geometry, material );
 
-					scene.add( object );
+						object.material.ambient = object.material.color;
 
-					objects.push( object );
+						object.position.x = Math.random() * 800;
+						object.position.y = Math.random() * 800;
+						object.position.z = Math.random() * (1500 - 500) + 500;
+					
+						object.rotation.x = Math.random() * 2 * Math.PI;
+						object.rotation.y = Math.random() * 2 * Math.PI;
+						object.rotation.z = Math.random() * 2 * Math.PI;
 
-				}
+						object.scale.x = object.scale.y = object.scale.z = Math.random() * 50 + 200;
+						
+						object.castShadow = true;
+						object.receiveShadow = true;
+						objects.push( object );
+						scene.add( object );
+					} 
+				});
+				
 
 				renderer = new THREE.WebGLRenderer( { antialias: false } );
 				renderer.setClearColor( 0xf0f0f0 );
@@ -155,21 +162,23 @@
 			}
 
 			function collisionUpdate(){
-
+				var localVertex, globalVertex, directionVector, ray, collisionResults, index;
 				for (var hands in pointers){
         			var originPoint = pointers[hands].position.clone();
 				
 					for (var vertexIndex = 0; vertexIndex < pointers[hands].geometry.vertices.length; vertexIndex++){
-							var localVertex = pointers[hands].geometry.vertices[vertexIndex].clone();
-							var globalVertex = localVertex.applyMatrix4( pointers[hands].matrix );
-							var directionVector = globalVertex.sub( pointers[hands].position );
-							var ray = new THREE.Raycaster( originPoint, directionVector.clone().normalize());
-							var collisionResults = ray.intersectObjects( objects );
+							localVertex = pointers[hands].geometry.vertices[vertexIndex].clone();
+							globalVertex = localVertex.applyMatrix4( pointers[hands].matrix );
+							directionVector = globalVertex.sub( pointers[hands].position );
+							ray = new THREE.Raycaster( originPoint, directionVector.clone().normalize());
+							collisionResults = ray.intersectObjects( objects );
 
 							for (var i = 0; i < collisionResults.length; i++){
 								if (collisionResults.length > 0 && collisionResults[i].distance < directionVector.length()){
-									scene.remove(collisionResults[i])
-										score += 100;
+									scene.remove(collisionResults[i].object)
+									index = objects.indexOf(collisionResults[i].object);
+									objects.splice(index, 1);
+									score += 100;
 								}
 							}
 						}
@@ -186,10 +195,11 @@
 				    	pointers[data.id].position.x = window.innerWidth/2 - data.hand_x;
 				    	pointers[data.id].position.y = data.hand_y - window.innerHeight/2;
 				    	pointers[data.id].position.z = data.hand_z;
-				    	//console.log('mano', pointers[data.id].position.z)
 				        break;
 				    case "remove_hand":
 				    	scene.remove(pointers[data.id]);
+				    	delete(pointers[data.id]);
+									
 				}
 				
 			}
