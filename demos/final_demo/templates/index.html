@@ -60,36 +60,7 @@
 				scene.add( light_2 );
 				
 				// Load the blender's monkey and give him different position, size, colors and levels of shininess ...
-
-				var loader = new THREE.JSONLoader();
-				loader.load( 'static/obj/Suzanne.js', function ( geometry ) {
-
-					geometry.computeVertexNormals();
-
-					for ( var i = 0; i < 8; i ++ ) {
-						var material = new THREE.MeshLambertMaterial( { color: Math.random() * 0xffffff } );
-	
-						var object = new THREE.Mesh( geometry, material );
-
-						object.material.ambient = object.material.color;
-						object.material.shininess = Math.random() * (1000 - 40) + 40;
-
-						object.position.x = Math.random() * 800;
-						object.position.y = Math.random() * 800;
-						object.position.z = Math.random() * (1500 - 500) + 500;
-					
-						object.rotation.x = Math.random() * 2 * Math.PI;
-						object.rotation.y = Math.random() * 2 * Math.PI;
-						object.rotation.z = Math.random() * 2 * Math.PI;
-
-						object.scale.x = object.scale.y = object.scale.z = Math.random() * (250 - 125) + 125;
-						
-						object.castShadow = true;
-						object.receiveShadow = true;
-						objects.push( object );
-						scene.add( object );
-					} 
-				});
+				create_monkeys(8, 4);
 				
 
 				renderer = new THREE.WebGLRenderer( { antialias: false } );
@@ -123,6 +94,39 @@
 
 			}
 			
+			function create_monkeys (nMax, nMin) {
+
+				var loader = new THREE.JSONLoader();
+				loader.load( 'static/obj/Suzanne.js', function ( geometry ) {
+
+					geometry.computeVertexNormals();
+
+					for ( var i = 0; i < Math.random() * (nMax - nMin) + nMin; i ++ ) {
+						var material = new THREE.MeshLambertMaterial( { color: Math.random() * 0xffffff } );
+	
+						var object = new THREE.Mesh( geometry, material );
+
+						object.material.ambient = object.material.color;
+						object.material.shininess = Math.random() * (1000 - 40) + 40;
+
+						object.position.x = Math.random() * 800;
+						object.position.y = Math.random() * 800;
+						object.position.z = Math.random() * (1500 - 500) + 500;
+					
+						object.rotation.x = Math.random() * 2 * Math.PI;
+						object.rotation.y = Math.random() * 2 * Math.PI;
+						object.rotation.z = Math.random() * 2 * Math.PI;
+
+						object.scale.x = object.scale.y = object.scale.z = Math.random() * (250 - 125) + 125;
+						
+						object.castShadow = true;
+						object.receiveShadow = true;
+						objects.push( object );
+						scene.add( object );
+					} 
+				});
+				
+			}
 
 			/*Calculate the next position of our monkey's heads*/
 			
@@ -146,7 +150,11 @@
 				requestAnimationFrame( animate );
 				render();
 				collisionUpdate();
-				scoreboard.update(score);	
+				scoreboard.update(score);
+
+				if (objects.length < Math.random() * (3 - 1) + 1)
+					create_monkeys(3, 2);
+
 			}
 
 			function render() {
@@ -175,9 +183,10 @@
 							for (var i = 0; i < collisionResults.length; i++){
 								if (collisionResults.length > 0 && collisionResults[i].distance < directionVector.length()){
 									score += 100;
-									scene.remove(collisionResults[i].object);
 									index = objects.indexOf(collisionResults[i].object);
-									objects.splice(index, 1);
+									if ( ~index ) objects.splice(index, 1);
+									scene.remove(collisionResults[i].object);
+									
 								}
 							}
 						}
@@ -212,8 +221,8 @@
 
 			function createPointer(id, x, y, z){
 				
-				geometry = new THREE.BoxGeometry( 100, 100, 100 );
-				pointers[id] = new THREE.Mesh( geometry, new THREE.MeshLambertMaterial( { color: Math.random() * 0xffffff } ) );
+				geometry = new THREE.BoxGeometry( 200, 200, 200 );
+				pointers[id] = new THREE.Mesh( geometry, new THREE.MeshLambertMaterial( { color: 0xff0000 } ) );
 				pointers[id].position.x = window.innerWidth/2 - x;
 				pointers[id].position.y = y - window.innerHeight/2;
 				pointers[id].position.z = z;

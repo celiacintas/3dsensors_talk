@@ -7,6 +7,7 @@ import json
 
 class Kinect:
     """Manage context and generator of the kinect"""
+
     def __init__(self, dir_pub):
 
         self.ctx_zmq = zmq.Context()
@@ -38,11 +39,15 @@ class Kinect:
         print "Dave is waving !!", src
 
     def destroy(self, src, id, time):
+        """Remove the element when the hand is lost"""
+
         data = {'type':'remove_hand', 'id': id}
         message = json.dumps(data)
         self.socket.send(message)
 
     def create(self, src, id, pos, time):
+        """Add element in the scene when the hand appears"""
+
         try:
             data = {'type':'create_hand', 'id': id, 'hand_x': pos[0], 
                     'hand_y': pos[1], 'hand_z': pos[2]}
@@ -53,6 +58,8 @@ class Kinect:
             self.socket.send(message)
 
     def update(self, src, id, pos, time):
+        """Send the x,y,z position of the hand when it changes"""
+
         try:
             data = {'type':'update_pos', 'id': id, 'hand_x': pos[0], 
                     'hand_y': pos[1], 'hand_z': pos[2]}
@@ -63,6 +70,8 @@ class Kinect:
             self.socket.send(message)
 
     def gesture_detected(self, src, gesture, id, end_point):
+        """Start tracking the hand when the gesture is detected."""
+        
         print "Detected gesture:", gesture
         self.hands_generator.start_tracking(end_point)
 
@@ -70,3 +79,6 @@ class Kinect:
         while 1:
             self.context.wait_any_update_all()
 
+    def delete(self):
+        self.context.stop_generating_all()
+        self.context.shutdown()
