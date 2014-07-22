@@ -19,8 +19,6 @@
 	<body>
 		<script src="static/three.min.js"></script>
 
-		<script src="static/js/controls/TrackballControls.js"></script>
-
 		<script src="static/js/libs/score.js"></script>
 
 		<script>
@@ -125,9 +123,10 @@
 
 			}
 			
-	
+
+			/*Calculate the next position of our monkey's heads*/
+			
 			function move(){
-				/*Calculate the next position of our monkey's heads*/
 				
 				var timer = 0.00001 * Date.now();
 				var temp
@@ -139,9 +138,11 @@
 				}
 			}
 
-				
+
+			/*Update and Render*/
+
 			function animate() {
-				/*Update and Render*/
+				
 				requestAnimationFrame( animate );
 				render();
 				collisionUpdate();
@@ -154,9 +155,11 @@
 
 			}
 
-			function collisionUpdate(){
-				/*Check if our hand is intersecting some monkey*/
 
+			/*Check if our hand is intersecting some monkey*/
+
+			function collisionUpdate(){
+				
 				var localVertex, globalVertex, directionVector, ray, collisionResults, index;
 
 				for (var hands in pointers){
@@ -181,9 +184,11 @@
 					}
 			}
 
-			function updateReceived (event) {
-				/*The kinect send some more data .. decide what you want to do ..*/
 
+			/*The kinect send some more data .. decide what you want to do ..*/
+
+			function updateReceived (event) {
+				
 				var data = JSON.parse(event.data);
 				switch(data.type) {
     				case "create_hand":
@@ -202,9 +207,11 @@
 				
 			}
 
-			function createPointer(id, x, y, z){
-				/*Hey .. there is a new hand let's draw it*/
 
+			/*Hey .. there is a new hand let's draw it*/
+
+			function createPointer(id, x, y, z){
+				
 				geometry = new THREE.BoxGeometry( 100, 100, 100 );
 				pointers[id] = new THREE.Mesh( geometry, new THREE.MeshLambertMaterial( { color: Math.random() * 0xffffff } ) );
 				pointers[id].position.x = window.innerWidth/2 - x;
